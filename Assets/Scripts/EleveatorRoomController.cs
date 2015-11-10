@@ -1,10 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
+using System.Linq;
 
 public class EleveatorRoomController : MonoBehaviour , IActivatible, ElevatorComponent {
 
 	public EleveatorController elevatorReference;
-	public Collider[] objectsInElevator = new Collider[10];
+	public MovableObject[] objectsInElevator = new MovableObject[10];
 	Animator elevatorAnimator;
 	public float elevatorSpeed = 1;
 	[SerializeField] private int CurrentFloor;
@@ -42,22 +44,27 @@ public class EleveatorRoomController : MonoBehaviour , IActivatible, ElevatorCom
 	
 	// Update is called once per frame
 	void Update () {
-	
+
 	}
 
 	void OnTriggerEnter(Collider other) {
 		ElevatorWallController currentElevatorFloor = other.transform.gameObject.GetComponent<ElevatorWallController>();
 		if (currentElevatorFloor != null && elevatorSpeed > 0) {
 			currentFloor = currentElevatorFloor.currentFloor;
-		} else{
-			int num = 1;
-			bool foundEmtyspot = false;
-			while (!foundEmtyspot) {
-				if (objectsInElevator [num] == null) {
-					foundEmtyspot = true;
-					objectsInElevator [num] = other;
-				} else {
-					num++;
+		} else {
+			MovableObject moveableObject = other.transform.gameObject.GetComponent<MovableObject> ();
+			if (moveableObject != null && !objectsInElevator.Contains(moveableObject)) {
+				int num = 0;
+				bool foundEmtyspot = false;
+				while (!foundEmtyspot) {
+					if (objectsInElevator [num] == null) {
+						foundEmtyspot = true;
+						objectsInElevator [num] = moveableObject;
+					} else if (num >= objectsInElevator.Length) {
+						foundEmtyspot = true;
+					} else {
+						num++;
+					}
 				}
 			}
 		}
@@ -67,6 +74,11 @@ public class EleveatorRoomController : MonoBehaviour , IActivatible, ElevatorCom
 		ElevatorWallController currentElevatorFloor = other.transform.gameObject.GetComponent<ElevatorWallController> ();
 		if (currentElevatorFloor != null && elevatorSpeed < 0) {
 			currentFloor = currentElevatorFloor.currentFloor;
+		} else {
+			MovableObject movableOject = other.transform.gameObject.GetComponent<MovableObject> ();
+			if (movableOject != null) {
+				objectsInElevator[Array.IndexOf(objectsInElevator,movableOject)] = null;
+			}
 		}
 	}
 
@@ -83,11 +95,18 @@ public class EleveatorRoomController : MonoBehaviour , IActivatible, ElevatorCom
 		elevatorReference.toggleCurrentDoor ();
 		isMoving = true;
 		if (currentFloor > floor)
-			elevatorSpeed = elevatorSpeed * -1;
+			elevatorSpeed = -1;
+		else
+			elevatorSpeed = 1;
 		while (currentFloor != floor) {
 			currentState = elevatorAnimator.GetCurrentAnimatorStateInfo(elevatorAnimator.GetLayerIndex("Base Layer"));
 			if (currentState.IsName("closedWallAnimation")){
 				transform.parent.Translate (new Vector3 (0, (elevatorSpeed * Time.deltaTime), 0));
+				for (int elevatorObject = 0; elevatorObject < objectsInElevator.Length; elevatorObject++) {
+					if (objectsInElevator[elevatorObject] != null){
+						objectsInElevator[elevatorObject].transform.Translate(new Vector3(0, 0, elevatorSpeed * Time.deltaTime));
+					}
+				}
 			}
 				yield return null;
 		}

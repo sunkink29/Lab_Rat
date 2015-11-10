@@ -6,13 +6,13 @@ using System.Collections;
 public class ButtonController : MonoBehaviour , Interactible {
 	Animator buttonAnimator;
 	[SerializeField] string condition;
-	GameObject attachedObject;
+	[SerializeField] GameObject attachedObject;
 	
 	void Start () {
-		RaycastHit hitInfo;
+		//RaycastHit hitInfo;
 		buttonAnimator = GetComponent<Animator> ();
-		Physics.Raycast (gameObject.transform.position, gameObject.transform.up * -1, out hitInfo);
-		attachedObject = hitInfo.transform.gameObject;
+		//Physics.Raycast (gameObject.transform.position, gameObject.transform.up * -1, out hitInfo);
+		//attachedObject = hitInfo.transform.gameObject;
 	}
 	
 	void Update () {
